@@ -1,0 +1,11 @@
+{
+  "_patterns": {
+    "suspicious_obf_string": "eval\\(|Runtime\\.getRuntime|dexclassloader"
+  },
+  "e3b0c44298fc1c149afbf4c8996fb924...": {
+    "name": "example-bad-sample",
+    "source": "manual",
+    "severity": "high",
+    "note": "contoh signature lokal"
+  }
+}

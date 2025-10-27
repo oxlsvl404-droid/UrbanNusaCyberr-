@@ -1,0 +1,84 @@
+#:kivy 2.1.0
+<RootWidget@BoxLayout>:
+    orientation: "vertical"
+    padding: dp(12)
+    spacing: dp(8)
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(56)
+        canvas.before:
+            Color:
+                rgba: 0.07,0.21,0.37,1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: "UrbanNusaCyber"
+            color: 1,1,1,1
+            bold: True
+            font_size: '18sp'
+        Label:
+            text: app.status
+            color: .9,.9,.9,1
+            size_hint_x: .6
+            halign: 'right'
+            valign: 'middle'
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(48)
+        spacing: dp(8)
+        TextInput:
+            id: folder_input
+            hint_text: "/sdcard/Download"
+            multiline: False
+        Button:
+            text: "Scan Folder"
+            on_release: app.scan_folder(folder_input.text or "/sdcard/Download")
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(48)
+        spacing: dp(8)
+        TextInput:
+            id: url_input
+            hint_text: "Enter URL or link to check"
+            multiline: False
+        Button:
+            text: "Scan URL"
+            on_release: app.scan_url(url_input.text)
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(48)
+        spacing: dp(8)
+        TextInput:
+            id: sigs_url
+            hint_text: "Signatures update URL (optional)"
+            multiline: False
+        Button:
+            text: "Update Signatures"
+            on_release: app.update_sigs(sigs_url.text)
+
+    Label:
+        text: "Results"
+        size_hint_y: None
+        height: dp(28)
+        bold: True
+
+    ScrollView:
+        GridLayout:
+            id: results_grid
+            cols: 1
+            size_hint_y: None
+            height: self.minimum_height
+            row_default_height: dp(80)
+            row_force_default: True
+            padding: dp(4)
+            spacing: dp(6)
+            canvas.before:
+                Color: .97, .97, .97, 1
+                Rectangle: pos: self.pos; size: self.size
+            # dynamic population from app.results
+            # We'll create items in on_kv_post via python or expose results to kv.

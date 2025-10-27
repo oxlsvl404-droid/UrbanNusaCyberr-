@@ -1,64 +1,61 @@
-name: Build UrbanNusaCyberr APK
+name: build-apk.yml
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
 
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install JDK
+        uses: actions/setup-java@v4
         with:
-          python-version: '3.10'
+          distribution: temurin
+          java-version: '17'
 
-      - name: Install dependencies
+      - name: Install system deps
         run: |
-          sudo apt update
-          sudo apt install -y zip unzip openjdk-17-jdk python3-pip git python3 python3-venv wget
-          pip install --upgrade pip
-          pip install buildozer cython
+          sudo apt-get update
+          sudo apt-get install -y unzip wget curl git gradle
 
-      - name: Install Android SDK Build Tools
+      - name: Install Android commandline tools & SDK components
         run: |
-          # Siapkan direktori SDK
-          mkdir -p $HOME/android-sdk/cmdline-tools
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools
-          
-          # Export environment variables
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          
-          # Terima semua lisensi SDK
-          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --licenses || true
-          
-          # Instal semua komponen penting
-          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager \
-            "platform-tools" "build-tools;36.0.1" "platforms;android-33"
+          unzip -q cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          # Move to expected path
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools/* $ANDROID_SDK_ROOT/cmdline-tools/latest/ || true
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Initialize buildozer environment
+      - name: Show Java & Gradle
         run: |
-          buildozer init || true
-          # Pastikan buildozer.spec memiliki versi
-          if ! grep -q "^version =" buildozer.spec; then
-            echo "version = 1.0.0" >> buildozer.spec
+          java -version
+          gradle -version
+
+      - name: Build debug APK
+        working-directory: ${{ github.workspace }}
+        run: |
+          # prefer gradlew if present, otherwise use system gradle
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug --no-daemon
+          else
+            gradle assembleDebug --no-daemon
           fi
 
-      - name: Build APK
-        run: |
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          buildozer android debug
-
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: UrbanNusaCyberr-APK
-          path: bin/*.apk
+          name: UrbanNusaCyberr-apk
+          path: app/build/outputs/apk/debug/*.apk

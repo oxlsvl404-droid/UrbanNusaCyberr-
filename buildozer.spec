@@ -1,5 +1,6 @@
 [app]
 title = UrbanNusaCyberr
+version = 4.0.4
 package.name = urbannusacyberr
 package.domain = org.urban.nusa
 source.dir = .
